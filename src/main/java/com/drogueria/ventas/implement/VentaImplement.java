@@ -25,6 +25,8 @@ public class VentaImplement implements VentaService {
     @Autowired
     private RestTemplate restTemplate;
 
+    private String urlMedicamentoService = "http://medicamentos-service/api/medicamentos/";
+
     @Override
     public List<Venta> listarVentas() {
 
@@ -37,7 +39,7 @@ public class VentaImplement implements VentaService {
         for (int i=0; i<ventas.size();i++) {
 
             MedicamentoDto medicamentoDto = restTemplate.getForObject(
-                    "http://medicamentos-service/api/medicamentos/" + ventas.get(i).getMedicamento(),
+                    urlMedicamentoService + ventas.get(i).getMedicamento(),
                     MedicamentoDto.class
             );
             ventas.get(i).setMedicamentoDto(medicamentoDto);
@@ -51,30 +53,29 @@ public class VentaImplement implements VentaService {
     public void guardar(Venta venta) {
 
         MedicamentoDto medicamentoDto = restTemplate.getForObject(
-                "http://medicamentos-service/api/medicamentos/" + venta.getMedicamento(),
+                urlMedicamentoService + venta.getMedicamento(),
                 MedicamentoDto.class
         );
 
-        System.out.println("ENTRE A GUARDAR");
+        if(medicamentoDto != null){
+            if( !hayStock(medicamentoDto.getStock() - venta.getCantidad())){
+                throw new NotFoundException("No hay stock suficiente");
+            }
 
-        if(!hayStock(medicamentoDto.getStock() - venta.getCantidad())){
-            throw new NotFoundException("No hay stock suficiente");
+            medicamentoDto.setStock(medicamentoDto.getStock() - venta.getCantidad()); // Se realiza la resta de stock cuando se genera la venta
+
+            venta.setValor_unitario(medicamentoDto.getValor_unitario());
+            venta.setValor_total(medicamentoDto.getValor_unitario() * venta.getCantidad());
+
+            //Actualizar el medicamento en el inventario
+            restTemplate.put(
+                    urlMedicamentoService+venta.getMedicamento(),
+                    medicamentoDto,
+                    MedicamentoDto.class
+            );
+
+            ventaRepository.save(venta);
         }
-
-        medicamentoDto.setStock(medicamentoDto.getStock() - venta.getCantidad()); // Se realiza la resta de stock cuando se genera la venta
-
-        //venta.setMedicamentoDto(medicamentoDto);
-        venta.setValor_unitario(medicamentoDto.getValor_unitario());
-        venta.setValor_total(medicamentoDto.getValor_unitario() * venta.getCantidad());
-
-        //Actualizar el medicamento en el inventario
-        restTemplate.put(
-                "http://medicamentos-service/api/medicamentos/"+venta.getMedicamento(),
-                medicamentoDto,
-                MedicamentoDto.class
-        );
-
-        ventaRepository.save(venta);
     }
 
     public boolean hayStock(int cantidad) {
@@ -105,10 +106,10 @@ public class VentaImplement implements VentaService {
 
         Venta venta = ventaRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Venta no encontrada")
-        );;
+        );
 
         MedicamentoDto medicamentoDto = restTemplate.getForObject(
-                "http://medicamentos-service/api/medicamentos/" + venta.getMedicamento(),
+                urlMedicamentoService + venta.getMedicamento(),
                 MedicamentoDto.class
         );
 
@@ -119,9 +120,6 @@ public class VentaImplement implements VentaService {
 
     @Override
     public List<Venta> ventasPorMedicamento(String id) {
-        List<Venta> ventas = new ArrayList<>();
-        ventas = ventaRepository.findByMedicamento(id);
-
-        return ventas;
+        return ventaRepository.findByMedicamento(id);
     }
 }
