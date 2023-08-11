@@ -6,7 +6,7 @@ import java.util.Date;
 
 @Data
 public class MedicamentoDto {
-    private Integer id;
+    private String id;
     private String nombre;
     private String lab_fabrica;
     private Date fecha_fabricacion;

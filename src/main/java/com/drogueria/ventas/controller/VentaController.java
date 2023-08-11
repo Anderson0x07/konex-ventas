@@ -14,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ventas")
-@CrossOrigin
 public class VentaController {
 
     @Autowired
@@ -38,12 +37,6 @@ public class VentaController {
         response.put("message", "Venta registrada exitosamente");
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public Venta updateVenta(@PathVariable String id, @RequestBody Venta updatedVenta) {
-        return ventaService.editarVenta(id, updatedVenta);
     }
 
     @GetMapping("/{id}")

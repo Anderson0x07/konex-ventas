@@ -13,8 +13,6 @@ public interface VentaService {
 
     public void eliminar(String id);
 
-    public Venta editarVenta(String id, Venta venta);
-
     public Venta encontrarVenta(String id);
 
 }

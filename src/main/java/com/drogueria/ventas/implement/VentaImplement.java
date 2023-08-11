@@ -29,6 +29,16 @@ public class VentaImplement implements VentaService {
         if (ventas.isEmpty()) {
             throw new NotFoundException("No hay ventas registradas");
         }
+
+        for (int i=0; i<ventas.size();i++) {
+
+            MedicamentoDto medicamentoDto = restTemplate.getForObject(
+                    "http://medicamentos-service/api/medicamentos/" + ventas.get(i).getMedicamento(),
+                    MedicamentoDto.class
+            );
+            ventas.get(i).setMedicamentoDto(medicamentoDto);
+        }
+
         return ventas;
     }
 
@@ -37,20 +47,34 @@ public class VentaImplement implements VentaService {
     public void guardar(Venta venta) {
 
         MedicamentoDto medicamentoDto = restTemplate.getForObject(
-                "http://medicamentos-service/medicamentos/" + venta.getMedicamento(),
+                "http://medicamentos-service/api/medicamentos/" + venta.getMedicamento(),
                 MedicamentoDto.class
         );
 
+        System.out.println("ENTRE A GUARDAR");
+
+        if(!hayStock(medicamentoDto.getStock() - venta.getCantidad())){
+            throw new NotFoundException("No hay stock suficiente");
+        }
+
         medicamentoDto.setStock(medicamentoDto.getStock() - venta.getCantidad()); // Se realiza la resta de stock cuando se genera la venta
+
+        //venta.setMedicamentoDto(medicamentoDto);
+        venta.setValor_unitario(medicamentoDto.getValor_unitario());
+        venta.setValor_total(medicamentoDto.getValor_unitario() * venta.getCantidad());
 
         //Actualizar el medicamento en el inventario
         restTemplate.put(
-                "http://medicamentos-service/medicamentos",
+                "http://medicamentos-service/api/medicamentos/"+venta.getMedicamento(),
                 medicamentoDto,
                 MedicamentoDto.class
         );
 
         ventaRepository.save(venta);
+    }
+
+    public boolean hayStock(int cantidad) {
+        return (cantidad >= 0);
     }
 
     @Override
@@ -61,30 +85,6 @@ public class VentaImplement implements VentaService {
         ventaRepository.deleteById(id);
     }
 
-    @Transactional
-    @Override
-    public Venta editarVenta(String id, Venta updatedVenta) {
-        Venta existingVenta = ventaRepository.findById(id).orElseThrow(
-                () -> new NotFoundException("Venta no encontrada")
-        );
-
-        if (existingVenta.getFecha_venta() != null)
-            existingVenta.setFecha_venta(updatedVenta.getFecha_venta());
-
-        if (existingVenta.getMedicamento() != null)
-            existingVenta.setMedicamento(updatedVenta.getMedicamento());
-
-        if (existingVenta.getCantidad() != 0)
-            existingVenta.setCantidad(updatedVenta.getCantidad());
-
-        if (existingVenta.getValor_unitario() != 0)
-            existingVenta.setValor_unitario(updatedVenta.getValor_unitario());
-
-        if (existingVenta.getValor_total() != 0)
-            existingVenta.setValor_total(updatedVenta.getValor_total());
-
-        return ventaRepository.save(existingVenta);
-    }
 
     @Override
     public Venta encontrarVenta(String id) {
@@ -99,7 +99,7 @@ public class VentaImplement implements VentaService {
                 MedicamentoDto.class
         );
 
-        venta.setMedicamento(medicamentoDto);
+        venta.setMedicamentoDto(medicamentoDto);
 
         return venta;
     }
