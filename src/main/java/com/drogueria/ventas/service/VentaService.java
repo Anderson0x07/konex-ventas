@@ -1,6 +1,5 @@
 package com.drogueria.ventas.service;
 
-import com.drogueria.ventas.dto.ResponseDto;
 import com.drogueria.ventas.entity.Venta;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +15,6 @@ public interface VentaService {
 
     public Venta editarVenta(String id, Venta venta);
 
-    public ResponseDto encontrarVenta(String id);
+    public Venta encontrarVenta(String id);
 
 }

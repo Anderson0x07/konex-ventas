@@ -1,6 +1,5 @@
 package com.drogueria.ventas.controller;
 
-import com.drogueria.ventas.dto.ResponseDto;
 import com.drogueria.ventas.entity.Venta;
 import com.drogueria.ventas.service.VentaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +48,7 @@ public class VentaController {
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseDto getVenta(@PathVariable String id) {
+    public Venta getVenta(@PathVariable String id) {
         return ventaService.encontrarVenta(id);
     }
 

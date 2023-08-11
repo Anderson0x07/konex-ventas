@@ -1,7 +1,6 @@
 package com.drogueria.ventas.implement;
 
 import com.drogueria.ventas.dto.MedicamentoDto;
-import com.drogueria.ventas.dto.ResponseDto;
 import com.drogueria.ventas.entity.Venta;
 import com.drogueria.ventas.exception.NotFoundException;
 import com.drogueria.ventas.repository.VentaRepository;
@@ -22,8 +21,6 @@ public class VentaImplement implements VentaService {
     @Autowired
     private RestTemplate restTemplate;
 
-
-
     @Override
     public List<Venta> listarVentas() {
 
@@ -40,7 +37,7 @@ public class VentaImplement implements VentaService {
     public void guardar(Venta venta) {
 
         MedicamentoDto medicamentoDto = restTemplate.getForObject(
-                "http://localhost:8081/medicamentos/" + venta.getMedicamento(),
+                "http://medicamentos-service/medicamentos/" + venta.getMedicamento(),
                 MedicamentoDto.class
         );
 
@@ -48,18 +45,12 @@ public class VentaImplement implements VentaService {
 
         //Actualizar el medicamento en el inventario
         restTemplate.put(
-                "http://localhost:8081/medicamentos",
+                "http://medicamentos-service/medicamentos",
                 medicamentoDto,
                 MedicamentoDto.class
         );
 
-        // Utilizar la información del medicamento para calcular el valor total de la venta
-
-        // Resto de la lógica para crear la venta
-
         ventaRepository.save(venta);
-
-
     }
 
     @Override
@@ -96,24 +87,20 @@ public class VentaImplement implements VentaService {
     }
 
     @Override
-    public ResponseDto encontrarVenta(String id) {
+    public Venta encontrarVenta(String id) {
 
-        ResponseDto responseDto = new ResponseDto();
 
         Venta venta = ventaRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Venta no encontrada")
         );;
 
         MedicamentoDto medicamentoDto = restTemplate.getForObject(
-                "http://localhost:8081/api/medicamentos/" + venta.getMedicamento(),
+                "http://medicamentos-service/api/medicamentos/" + venta.getMedicamento(),
                 MedicamentoDto.class
         );
 
-        //MedicamentoDto medicamentoDto = responseEntity.getBody();
+        venta.setMedicamento(medicamentoDto);
 
-        responseDto.setVenta(venta);
-        responseDto.setMedicamentoDto(medicamentoDto);
-
-        return responseDto;
+        return venta;
     }
 }
