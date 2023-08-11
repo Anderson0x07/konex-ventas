@@ -45,6 +45,12 @@ public class VentaController {
         return ventaService.encontrarVenta(id);
     }
 
+    @GetMapping("/medicamento/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Venta> getVentasPorMedicamento(@PathVariable String id) {
+        return ventaService.ventasPorMedicamento(id);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteVenta(@PathVariable String id) {
         ventaService.eliminar(id);

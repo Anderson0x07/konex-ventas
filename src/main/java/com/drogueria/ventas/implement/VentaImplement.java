@@ -5,14 +5,18 @@ import com.drogueria.ventas.entity.Venta;
 import com.drogueria.ventas.exception.NotFoundException;
 import com.drogueria.ventas.repository.VentaRepository;
 import com.drogueria.ventas.service.VentaService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Service
+@Slf4j
 public class VentaImplement implements VentaService {
 
     @Autowired
@@ -79,11 +83,20 @@ public class VentaImplement implements VentaService {
 
     @Override
     public void eliminar(String id) {
-        ventaRepository.findById(id).orElseThrow(
-                () -> new NotFoundException("Venta no encontrada")
-        );
-        ventaRepository.deleteById(id);
+
+        log.info("Entrando al servicio de venta para eliminar las ventas de dicho medicamento");
+        List<Venta> ventas = ventaRepository.findByMedicamento(id);
+        log.info(ventas.toString());
+
+        if(!ventas.isEmpty()){
+            for (Venta venta: ventas) {
+                ventaRepository.deleteById(venta.getId());
+            }
+        } else {
+            ventaRepository.deleteById(id);
+        }
     }
+
 
 
     @Override
@@ -102,5 +115,13 @@ public class VentaImplement implements VentaService {
         venta.setMedicamentoDto(medicamentoDto);
 
         return venta;
+    }
+
+    @Override
+    public List<Venta> ventasPorMedicamento(String id) {
+        List<Venta> ventas = new ArrayList<>();
+        ventas = ventaRepository.findByMedicamento(id);
+
+        return ventas;
     }
 }

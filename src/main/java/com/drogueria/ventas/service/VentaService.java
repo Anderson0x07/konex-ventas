@@ -15,4 +15,6 @@ public interface VentaService {
 
     public Venta encontrarVenta(String id);
 
+    public List<Venta> ventasPorMedicamento(String id);
+
 }
